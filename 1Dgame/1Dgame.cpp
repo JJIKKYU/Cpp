@@ -1,90 +1,91 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+﻿// Screen.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
+//
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
-#include <Windows.h> // sleep 함수 사용을 위해
-#include <conio.h> // getch 함수 사용을 위해
+#include <conio.h>
+#include <Windows.h>
+
 using namespace std;
 
-void draw(char* location, const char* face) {
-	strncpy(location, face, strlen(face));
+void draw(char* loc, const char* face)
+{
+	strncpy(loc, face, strlen(face));
 }
+
+struct GameObject {
+	int pos;
+	char face[20];
+
+	// 생성자 함수, 생성자 함수 안에서 this를 생략할 수 있다.
+	GameObject(int pos, const char *face) {
+		this->pos = pos;
+		strcpy(this->face, face);
+	}
+
+	void draw(char *screen) {
+		strncpy(&screen[pos], face, strlen(face));
+	}
+
+	// 소멸자 함수
+	~GameObject() {
+
+	}
+};
+
+
 
 int main()
 {
 	const int screen_size = 80;
 	char screen[screen_size + 1];
-	char player_face[] = "(^o^)";
-	int player_pos = 30;
-	char enemy_face[] = "(#__#)";
-	int enemy_pos = 60;
-	char bullet_face[] = "+";
-	const int max_bullets = 100;
-	int bullet_pos[max_bullets]; // 안 보이는 공간에 놓기 위해서
+	GameObject player(20, "(^__^)");
+	GameObject enemy(60, "(&__&)");
+	GameObject bullet(-1, "+");
 
-	// 총알을 모두 초기화
-	for (int i = 0; i < max_bullets; i++) {
-		bullet_pos[i] = -1;
-	}
-
-
-	while (true) {
-
-		for (int i = 0; i < screen_size; ++i) {
-			screen[i] = ' ';
-		}
+	while (true)
+	{
+		for (int i = 0; i < screen_size; i++) screen[i] = ' ';
 		screen[screen_size] = '\0';
 
-		if (_kbhit()) {
+		if (_kbhit())
+		{
 			int c = _getch();
 			switch (c) {
 			case 'a':
-				player_pos = (player_pos - 1) % screen_size; // screen_size를 나눠주는 이유는 스크린 사이즈를 넘어가지 않게 하기 위해서
+				player.pos = (player.pos - 1) % screen_size;
 				break;
 			case 'd':
-				player_pos = (player_pos + 1) % screen_size;
+				player.pos = (player.pos + 1) % screen_size;
 				break;
 			case ' ':
-				int i = 0;
-				for (; i < max_bullets; i++) {
-					if (bullet_pos[i] == -1)
-						break;
-				}
-				if (i == max_bullets) break;
-				// i < max_bullets
-				bullet_pos[i] = player_pos;
+				bullet.pos = player.pos;
 				break;
 			}
 		}
+		player.draw(screen);
+		enemy.draw(screen);
 
-		//player_pos = (player_pos + rand() % 3 - 1) % screen_size;
-		enemy_pos = (enemy_pos + rand() % 3 - 1) % screen_size;
-		for (int i = 0; i < max_bullets; i++) {
-			if (bullet_pos[i] != -1) {
-				if (bullet_pos[i] < enemy_pos) {
-					bullet_pos[i] = (bullet_pos[i] + 1) % screen_size;
-				}
-				else if (bullet_pos[i] > enemy_pos) {
-					bullet_pos[i] = (bullet_pos[i] - 1) % screen_size;
-				}
-				else {
-					bullet_pos[i] = -1;
-				}
-			}
+		if (bullet.pos != -1) {
+			bullet.draw(screen);
 		}
 
-		draw(&screen[player_pos], player_face);
-		draw(&screen[enemy_pos], enemy_face);
-
-		for (int i = 0; i < max_bullets; i++) {
-			if (bullet_pos[i] != -1) {
-				draw(&screen[bullet_pos[i]], bullet_face);
+		// update
+		enemy.pos = (enemy.pos + rand() % 3 - 1) % screen_size;
+		if (bullet.pos != -1) {
+			if (bullet.pos < enemy.pos) {
+				bullet.pos = (bullet.pos + 1) % screen_size;
+			}
+			else if (bullet.pos > enemy.pos) {
+				bullet.pos = (bullet.pos - 1) % screen_size;
+			}
+			else {
+				bullet.pos = -1;
 			}
 		}
-
 		printf("%s\r", screen);
-
-		//cout << screen << '\r';
 		Sleep(66);
 	}
+
 
 	return 0;
 }
